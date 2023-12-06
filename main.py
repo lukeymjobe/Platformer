@@ -11,15 +11,19 @@ HEIGHT = 600
 
 background = pygame.transform.scale(pygame.image.load("desert.jpg"), (WIDTH, HEIGHT))
 
+
 class Platforms:
     def __init__(self):
-        self.platform = pygame.transform.scale(pygame.image.load("platform.png"),(100,100))
+        self.platform = pygame.transform.scale(pygame.image.load("platform.png"), (200, 200))
 
         self.rect = self.platform.get_rect()
-        #self.rect.y = HEIGHT-self.rect.get_height()
+        self.rect.y = HEIGHT-self.platform.get_height()
         self.rect.x = 100
+
     def render(self):
         DISPLAY.blit(self.platform, self.rect)
+
+
 class Character:
     def __init__(self):
         self.walking_images = []
@@ -122,7 +126,7 @@ platforms = Platforms()
 
 while running:
     CLOCK.tick(60)
-    DISPLAY.blit(background, (0,0))
+    DISPLAY.blit(background, (0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
