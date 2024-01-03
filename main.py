@@ -36,7 +36,7 @@ class Character:
 
         self.gun_out = False
 
-        self.gun = pygame.transform.scale(pygame.transform.flip(pygame.image.load("gun.png"), True, False), (50,50))
+        self.gun = pygame.transform.scale(pygame.transform.flip(pygame.image.load("gun.png"), True, False), (50, 50))
         # add walking images to walking list
         for i in range(4):
             img = pygame.image.load("Penguin/Walk/walk{}.png".format(i))
@@ -136,13 +136,20 @@ class Character:
             DISPLAY.blit(self.gun, self.rect)
             self.rect.x -= 75
 
-class playerBullets:
+
+class PlayerBullets:
     def __init__(self):
-        
+        self.bullets = []
+        keypress = pygame.key.get_pressed()
+
+    def fire(self):
+        self.bullets.append([character.rect.x + 75, character.rect.y])
 
 
 DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
 character = Character()
+
+playerBullets = PlayerBullets()
 
 platform = Platform(200, 400)
 platform1 = Platform(400, 300)
@@ -156,6 +163,7 @@ platforms.append(platform1)
 platforms.append(platform2)
 platforms.append(platform3)
 
+
 def platform_materializer():
     if character.rect.y >= 600 - character.frame.get_height():
         character.velocity = 0
@@ -165,8 +173,8 @@ def platform_materializer():
         if pygame.Rect.colliderect(character.rect, i.rect):
             character.velocity = 0
             character.jumping = False
-        #if not pygame.Rect.colliderect(character.rect, i.rect):
-           # character.velocity
+        # if not pygame.Rect.colliderect(character.rect, i.rect):
+        # character.velocity
 
 
 while running:
@@ -183,8 +191,8 @@ while running:
                     character.gun_out = False
                 elif not character.gun_out:
                     character.gun_out = True
-
-
+            if event.key == pygame.K_DOWN:
+                playerBullets.fire()
     character.move()
     character.update()
     character.render()
@@ -192,12 +200,10 @@ while running:
     for i in platforms:
         i.render()
 
-
     platform_materializer()
 
     # print(character.walking_images[1].get_height())
     # print(character.walking_images[1].get_width())
-
 
     pygame.display.update()
 
