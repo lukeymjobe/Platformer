@@ -139,17 +139,47 @@ class Character:
 
 class PlayerBullets:
     def __init__(self):
+        pygame.mixer.music.load('blast.mp3')
         self.bullets = []
-        keypress = pygame.key.get_pressed()
+        img = pygame.image.load("tom.png")
+        self.tom = pygame.transform.scale(img, (img.get_width() / 10, img.get_height() / 10))
 
     def fire(self):
+        pygame.mixer.music.play(1)
         self.bullets.append([character.rect.x + 75, character.rect.y])
+
+    def update(self):
+        for i in self.bullets:
+            i[0] += 10
+
+        for i in self.bullets:
+            if i[0] > DISPLAY.get_width():
+                self.bullets.remove(i)
+
+    def render(self):
+        for i in self.bullets:
+            DISPLAY.blit(self.tom, (i[0], i[1]))
+
+class Pacman:
+    def __init__(self):
+        self.pa = [pygame.transform.scale(pygame.image.load("pacmanc.png"), (50, 50)), pygame.transform.scale(pygame.image.load("pacmano.png"), (50, 50))]
+        self.pr = self.pa[0].get_rect()
+
+        self.pr.x = 300
+        self.pr.y = 500
+
+
+    def render(self):
+        DISPLAY.blit(self.pa[0],self.pr)
+
 
 
 DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
 character = Character()
 
 playerBullets = PlayerBullets()
+
+pacman = Pacman()
 
 platform = Platform(200, 400)
 platform1 = Platform(400, 300)
@@ -192,11 +222,13 @@ while running:
                 elif not character.gun_out:
                     character.gun_out = True
             if event.key == pygame.K_DOWN:
-                playerBullets.fire()
+                if character.gun_out:
+                    playerBullets.fire()
     character.move()
     character.update()
     character.render()
 
+    pacman.render()
     for i in platforms:
         i.render()
 
@@ -204,6 +236,9 @@ while running:
 
     # print(character.walking_images[1].get_height())
     # print(character.walking_images[1].get_width())
+
+    playerBullets.update()
+    playerBullets.render()
 
     pygame.display.update()
 
