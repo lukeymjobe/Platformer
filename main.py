@@ -139,12 +139,12 @@ class Character:
 
 class PlayerBullets:
     def __init__(self):
-        pygame.mixer.music.load('blast.mp3')
         self.bullets = []
         img = pygame.image.load("tom.png")
         self.tom = pygame.transform.scale(img, (img.get_width() / 10, img.get_height() / 10))
 
     def fire(self):
+        pygame.mixer.music.load('blast.mp3')
         pygame.mixer.music.play(1)
         self.bullets.append([character.rect.x + 75, character.rect.y])
 
@@ -156,22 +156,76 @@ class PlayerBullets:
             if i[0] > DISPLAY.get_width():
                 self.bullets.remove(i)
 
+        # collision with tomatoes
+        for i in self.bullets:
+            # make rectangle of a tomato
+            tempTomRect = self.tom.get_rect()
+            # set its coordinates to the x and y stored in the i list
+            tempTomRect.x = i[0]
+            tempTomRect.y = i[1]
+            # check if that rectangle is colliding with the rectangle of pacman
+            if pygame.Rect.colliderect(tempTomRect, pacman.pr):
+                if pacman.mouth_open:
+                    if pacman.image == pacman.pa_left[1]:
+                        self.bullets.remove(i)
+                        pygame.mixer.music.load('chomp.mp3')
+                        pygame.mixer.music.play(1)
+                #if pacman.mouth_open:
+
+
+
+
+
     def render(self):
         for i in self.bullets:
             DISPLAY.blit(self.tom, (i[0], i[1]))
 
+
 class Pacman:
     def __init__(self):
-        self.pa = [pygame.transform.scale(pygame.image.load("pacmanc.png"), (50, 50)), pygame.transform.scale(pygame.image.load("pacmano.png"), (50, 50))]
-        self.pr = self.pa[0].get_rect()
+        self.pa_right = [pygame.transform.scale(pygame.image.load("pacmanc.png"), (50, 50)),
+                         pygame.transform.scale(pygame.image.load("pacmano.png"), (50, 50))]
+        self.pa_left = [pygame.transform.flip(self.pa_right[0], True, False),
+                        pygame.transform.flip(self.pa_right[1], True, False)]
 
-        self.pr.x = 300
-        self.pr.y = 500
+        self.image = self.pa_right[0]
+        self.mouth_open = False
+        self.pr = self.pa_right[0].get_rect()
 
+        self.pr.x = 375
+        self.pr.y = 235
+
+    def update(self):
+        keypress = pygame.key.get_pressed()
+        # if keypress[K_w]:
+        #     if self.mouth_open:
+        #         self.mouth_open = False
+        #     elif not self.mouth_open:
+        #         self.mouth_open = True
+
+        if keypress[K_d]:
+            self.pr.x += 5
+            if self.mouth_open == True:
+                self.image = self.pa_right[1]
+            else:
+                self.image = self.pa_right[0]
+
+        if keypress[K_a]:
+            self.pr.x -= 5
+            if self.mouth_open == True:
+                self.image = self.pa_left[1]
+            else:
+                self.image = self.pa_left[0]
+
+
+
+        # if keypress[K_w]:
+        #     self.pr.y -= 5
+        # if keypress[K_s]:
+        #     self.pr.y += 5
 
     def render(self):
-        DISPLAY.blit(self.pa[0],self.pr)
-
+        DISPLAY.blit(self.image, self.pr)
 
 
 DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -224,11 +278,18 @@ while running:
             if event.key == pygame.K_DOWN:
                 if character.gun_out:
                     playerBullets.fire()
+            if event.key == pygame.K_s:
+                if pacman.mouth_open:
+                    pacman.mouth_open = False
+
+                elif not pacman.mouth_open:
+                    pacman.mouth_open = True
     character.move()
     character.update()
     character.render()
 
     pacman.render()
+    pacman.update()
     for i in platforms:
         i.render()
 
