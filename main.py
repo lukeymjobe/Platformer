@@ -66,6 +66,7 @@ class Character:
         self.delay = 100
         self.jump_time = pygame.time.get_ticks()
         self.die_time = pygame.time.get_ticks()
+        self.hit_platform = False
 
     def update(self):
         # update animation
@@ -85,22 +86,52 @@ class Character:
         if not self.jumping:
             self.frame = self.walking_images[self.walking_index]
 
-        # update gravity
-        self.velocity += 0.5
-
         if self.velocity > 9.5:
             self.velocity = 9.5
 
-        if self.rect.y >= 600 - self.frame.get_height():
-            self.velocity = 0
-            self.jumping = False
+        # if self.rect.y >= 600 - self.frame.get_height():
+        #     self.velocity = 0
+        #     self.jumping = False
 
+
+        self.hit_platform = False
         for i in platforms:
-            self.rect.y -= 84
             if pygame.Rect.colliderect(self.rect, i.rect):
                 self.velocity = 0
+                self.hit_platform = True
+                break
+        if not self.hit_platform:
+            if self.rect.y >= 600 - self.frame.get_height():
+                self.velocity = 0
                 self.jumping = False
-            self.rect.y += 84
+            else:
+                self.velocity += 0.5
+
+
+
+
+
+
+            # elif self.rect.y >= 600 - self.frame.get_height():
+            #     self.velocity = 0
+            # else:
+            #     self.velocity += 0.5
+
+        # if self.rect.y >= 600 - self.frame.get_height():
+        #     self.velocity = 0
+        #
+        #     for i in platforms:
+        #         if pygame.Rect.colliderect(self.rect, i.rect):
+        #             self.velocity = 0
+        # else:
+        #     self.velocity += 0.5
+
+        # for i in platforms:
+        # self.rect.y -= 84
+        # if pygame.Rect.colliderect(self.rect, i.rect):
+        # self.velocity = 0
+        # self.jumping = False
+        # self.rect.y += 84
 
         self.rect.y += self.velocity
 
@@ -130,7 +161,13 @@ class Character:
             self.jumping = True
 
     def render(self):
-        DISPLAY.blit(self.frame, self.rect)
+        if self.hit_platform:
+            self.rect.y += 75
+            DISPLAY.blit(self.frame, self.rect)
+            self.rect.y -= 75
+        else:
+            DISPLAY.blit(self.frame, self.rect)
+
         if self.gun_out:
             self.rect.x += 75
             DISPLAY.blit(self.gun, self.rect)
@@ -170,11 +207,7 @@ class PlayerBullets:
                         self.bullets.remove(i)
                         pygame.mixer.music.load('chomp.mp3')
                         pygame.mixer.music.play(1)
-                #if pacman.mouth_open:
-
-
-
-
+                # if pacman.mouth_open:
 
     def render(self):
         for i in self.bullets:
@@ -190,10 +223,13 @@ class Pacman:
 
         self.image = self.pa_right[0]
         self.mouth_open = False
+
         self.pr = self.pa_right[0].get_rect()
 
         self.pr.x = 375
         self.pr.y = 235
+
+        self.velocity = 0
 
     def update(self):
         keypress = pygame.key.get_pressed()
@@ -202,6 +238,24 @@ class Pacman:
         #         self.mouth_open = False
         #     elif not self.mouth_open:
         #         self.mouth_open = True
+
+        if self.velocity > 9.5:
+            self.velocity = 9.5
+
+        self.pr.y += self.velocity
+
+        # reset gravity if contact with ground
+
+        # reset gravity if contact with platforms
+        for i in platforms:
+            if pygame.Rect.colliderect(self.pr, i.rect):
+                self.velocity = 0
+            elif self.pr.y >= 600 - self.image.get_height():
+                self.velocity = 0
+            else:
+                self.velocity += 0.5
+
+        self.pr.y += self.velocity
 
         if keypress[K_d]:
             self.pr.x += 5
@@ -217,12 +271,14 @@ class Pacman:
             else:
                 self.image = self.pa_left[0]
 
-
-
         # if keypress[K_w]:
         #     self.pr.y -= 5
         # if keypress[K_s]:
         #     self.pr.y += 5
+
+
+
+
 
     def render(self):
         DISPLAY.blit(self.image, self.pr)
@@ -275,6 +331,8 @@ while running:
                     character.gun_out = False
                 elif not character.gun_out:
                     character.gun_out = True
+                    pygame.mixer.music.load('unholster.mp3')
+                    pygame.mixer.music.play(1)
             if event.key == pygame.K_DOWN:
                 if character.gun_out:
                     playerBullets.fire()
@@ -284,12 +342,17 @@ while running:
 
                 elif not pacman.mouth_open:
                     pacman.mouth_open = True
+
+            if event.key == pygame.K_w:
+                pacman.velocity -= 50
+
     character.move()
     character.update()
     character.render()
 
     pacman.render()
     pacman.update()
+
     for i in platforms:
         i.render()
 
