@@ -22,7 +22,9 @@ class Pacman(pygame.sprite.Sprite):
                         pygame.transform.flip(self.pa_right[1], True, False)]
 
         self.image = self.pa_right[0]
+
         self.mouth_open = False
+        self.direction = "LEFT"
 
         self.rect = self.pa_right[0].get_rect()
 
@@ -36,24 +38,30 @@ class Pacman(pygame.sprite.Sprite):
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
 
+        self.double_jump = False
+
     def update(self):
         self.acc = vec(0, 0.5)
 
         keypress = pygame.key.get_pressed()
         if keypress[K_d]:
             self.acc.x = self.ACC
-            if self.mouth_open:
-                self.image = self.pa_right[1]
-            else:
-                self.image = self.pa_right[0]
+            self.direction = "RIGHT"
 
         if keypress[K_a]:
             self.acc.x = -self.ACC
-            if self.mouth_open:
-                self.image = self.pa_left[1]
-            else:
-                self.image = self.pa_left[0]
+            self.direction = "LEFT"
 
+        if self.mouth_open:
+            if self.direction == "RIGHT":
+                self.image = self.pa_right[1]
+            if self.direction == "LEFT":
+                self.image = self.pa_left[1]
+        if not self.mouth_open:
+            if self.direction == "RIGHT":
+                self.image = self.pa_right[0]
+            if self.direction == "LEFT":
+                self.image = self.pa_left[0]
 
         # update position
         self.acc.x += self.vel.x * self.FRIC
@@ -72,6 +80,11 @@ class Pacman(pygame.sprite.Sprite):
         hits = pygame.sprite.spritecollide(pacman, platforms, False)
         if hits:
             self.vel.y = -15
+            self.double_jump = False
+        if not hits:
+            if not self.double_jump:
+                self.vel.y = -15
+                self.double_jump = True
 
     def render(self):
         DISPLAY.blit(self.image, self.rect)
@@ -89,11 +102,91 @@ class Platform(pygame.sprite.Sprite):
         DISPLAY.blit(self.surf, self.rect)
 
 
+class Penguin(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.walking_images_r = []
+        self.walking_images_l = []
+
+
+        self.dying_images = []
+
+        self.walking_index = 0
+        self.dying_index = 0
+
+        self.gun_out = False
+
+        self.gun = pygame.transform.scale(pygame.transform.flip(pygame.image.load("gun.png"), True, False), (50, 50))
+        # add walking images to walking list
+        for i in range(4):
+            img = pygame.image.load("Penguin/Walk/walk{}.png".format(i))
+            self.walking_images_r.append(pygame.transform.scale(img, (100, 50)))
+
+        for i in range(4):
+            img = pygame.image.load("Penguin/Die/die{}.png".format(i))
+            self.dying_images.append(pygame.transform.scale(img, (100, 50)))
+
+        for image in self.walking_images_r:
+            img_with_flip = pygame.transform.flip(image, True, False)
+            self.walking_images_l.append(img_with_flip)
+
+
+
+        self.ACC = 0.2
+        self.FRIC = -0.12
+
+        self.pos = vec((220, 235))
+        self.vel = vec(0, 0)
+        self.acc = vec(0, 0)
+
+        self.direction = "RIGHT"
+
+        self.image = self.walking_images_r[self.walking_index]
+        self.rect = self.image.get_rect()
+
+
+    def update(self):
+        self.acc = vec(0, 0.5)
+
+        if self.rect.x <= 200:
+            self.direction = "RIGHT"
+        if self.rect.x >= 450:
+            self.direction = "LEFT"
+
+        if self.direction == "RIGHT":
+            self.acc.x = self.ACC
+        else:
+            self.acc.x = -self.ACC
+
+        self.acc.x += self.vel.x * self.FRIC
+        self.vel += self.acc
+        self.pos += self.vel + 0.5 * self.acc
+
+        self.rect.midbottom = self.pos
+
+        # update frames
+        if self.direction == "RIGHT":
+            self.image = self.walking_images_r[self.walking_index]
+        else:
+            self.image = self.walking_images_l[self.walking_index]
+
+
+        # gravity
+        hits = pygame.sprite.spritecollide(penguin, platforms, False)
+        if hits:
+            self.pos.y = hits[0].rect.top + 1
+            self.vel.y = 0
+
+    def render(self):
+        DISPLAY.blit(self.image, self.rect)
+
+
 DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
 
 pacman = Pacman()
+penguin = Penguin()
 
-platform = Platform(200, 400, 100, 20)
+platform = Platform(200, 400, 300, 20)
 platform1 = Platform(400, 300, 100, 20)
 platform2 = Platform(600, 500, 100, 20)
 platform3 = Platform(800, 200, 100, 20)
@@ -116,9 +209,17 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 pacman.jump()
+            if event.key == pygame.K_o:
+                if pacman.mouth_open:
+                    pacman.mouth_open = False
+                else:
+                    pacman.mouth_open = True
 
-    pacman.render()
     pacman.update()
+    pacman.render()
+
+    penguin.update()
+    penguin.render()
 
     for i in platforms:
         i.render()
