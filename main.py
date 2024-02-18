@@ -32,7 +32,7 @@ class Pacman(pygame.sprite.Sprite):
         self.rect.x = 400
         self.rect.y = 235
 
-        self.ACC = 0.9
+        self.ACC = 10
         self.FRIC = -0.12
 
         self.pos = vec((420, 235))
@@ -41,6 +41,7 @@ class Pacman(pygame.sprite.Sprite):
 
         self.double_jump = False
         self.triple_jump = False
+        
 
     def update(self):
         self.acc = vec(0, 0.5)
@@ -94,6 +95,8 @@ class Pacman(pygame.sprite.Sprite):
                 self.triple_jump = True
                 self.double_jump = True
 
+
+
     def render(self):
         DISPLAY.blit(self.image, self.rect)
 
@@ -113,24 +116,31 @@ class Platform(pygame.sprite.Sprite):
         temp = pygame.sprite.Group()
         temp.add(self)
 
-        if pygame.Rect.colliderect(pacman.rect, self.rect) and pygame.sprite.spritecollide(penguin, temp,
-                                                                                           False) and len(
-                platforms.sprites()) > 2:
-            self.active = False
-            platforms.remove(self)
+        if pygame.sprite.spritecollide(penguin, temp,False):
+            if pygame.Rect.colliderect(pacman.rect, self.rect):
+                keypress = pygame.key.get_pressed()
+                if keypress[K_s] and pacman.double_jump:
+                    platforms.remove(self)
+                    self.active = False
 
-            # randomly pick another platform to move penguin to
-            index = random.randint(0, len(platforms.sprites()) - 2)
-            newPlatform = platforms.sprites()[index]
-            penguin.pos = vec((newPlatform.rect.x + (newPlatform.width / 2), newPlatform.rect.y - 30))
+                    #randomly pick another platform to move penguin to
+                    if len(platforms.sprites()) > 2:
+                        index = random.randint(0, len(platforms.sprites()) - 2)
+                        newPlatform = platforms.sprites()[index]
+                        penguin.pos = vec((newPlatform.rect.x + (newPlatform.width / 2), newPlatform.rect.y - 30))
 
-            penguin.left_boundary = newPlatform.rect.x
-            penguin.right_boundary = (newPlatform.rect.x + newPlatform.width) - 100
+                        penguin.left_boundary = newPlatform.rect.x
+                        penguin.right_boundary = (newPlatform.rect.x + newPlatform.width) - 100
+                        
 
         if pygame.Rect.colliderect(pacman.rect, self.rect):
             keypress = pygame.key.get_pressed()
             if keypress[K_s] and pacman.double_jump:
                 platforms.remove(self)
+                self.active = False
+                platforms.remove(self)
+
+
 
     def render(self):
         DISPLAY.blit(self.surf, self.rect)
@@ -218,6 +228,16 @@ DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
 pacman = Pacman()
 penguin = Penguin()
 
+# for i in range(10):
+#     random_x = random.randint(0, 1000)
+#     random_y = random.randint(50, 850)
+#     random_w = random.randint(400,600)
+#     randomPlatform = Platform(random_x, random_y, random_w, 20)
+#
+
+
+
+
 platform = Platform(300, 400, 600, 20)
 platform1 = Platform(400, 300, 870, 20)
 platform2 = Platform(600, 500, 460, 20)
@@ -237,6 +257,7 @@ platforms.add(platform3)
 platforms.add(platform4)
 platforms.add(platform5)
 platforms.add(platform6)
+#platforms.add(randomPlatform)
 platforms.add(ground)
 
 while running:
