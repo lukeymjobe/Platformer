@@ -17,6 +17,7 @@ background = pygame.transform.scale(pygame.image.load("desert.jpg"), (WIDTH, HEI
 class Pacman(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        self.win = 0
         self.pa_right = [pygame.transform.scale(pygame.image.load("pacmanc.png"), (50, 50)),
                          pygame.transform.scale(pygame.image.load("pacmano.png"), (50, 50))]
         self.pa_left = [pygame.transform.flip(self.pa_right[0], True, False),
@@ -149,6 +150,7 @@ class Platform(pygame.sprite.Sprite):
 class Penguin(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        self.win = 0
         self.walking_images_r = []
         self.walking_images_l = []
 
@@ -226,14 +228,39 @@ class Penguin(pygame.sprite.Sprite):
 DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
 
 pacman = Pacman()
-penguin = Penguin()
 
-# for i in range(10):
-#     random_x = random.randint(0, 1000)
-#     random_y = random.randint(50, 850)
-#     random_w = random.randint(400,600)
-#     randomPlatform = Platform(random_x, random_y, random_w, 20)
-#
+
+penguin = Penguin()
+pacmanWins = 0
+penguinWins = 0
+
+
+def checkWin():
+    tempGroup = pygame.sprite.Group()
+    tempGroup.add(ground)
+    global pacmanWins
+    global penguinWins
+
+    if pygame.sprite.spritecollide(penguin, tempGroup, False) and not pygame.sprite.spritecollide(pacman, tempGroup, False):
+        print('ur mom')
+        pacman.win += 1
+    if pygame.sprite.spritecollide(pacman, tempGroup, False) and not pygame.sprite.spritecollide(penguin, tempGroup, False):
+        print('ur dad')
+        penguin.win += 1
+
+def stats():
+    black = (0,0,0)
+    font = pygame.font.Font("freesansbold.ttf", 45)
+
+    text = font.render(str(pacman.win), True, black)
+    DISPLAY.blit(text,(500, 700))
+
+    white = (255, 255, 255)
+    font = pygame.font.Font("freesansbold.ttf", 45)
+    text = font.render(str(penguin.win), True, black, white)
+    DISPLAY.blit(text, (700, 700))
+
+
 
 
 
@@ -280,6 +307,10 @@ while running:
 
     penguin.update()
     penguin.render()
+
+    checkWin()
+    stats()
+
 
     for i in platforms:
         i.update()
